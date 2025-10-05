@@ -1,14 +1,28 @@
 import pytest
 
-from domain.word import GUESSES, SECRETS
+from domain.words import (
+    GUESSES,
+    SECRETS,
+    InvalidWordError,
+    validate_guess,
+    validate_secret,
+)
 
 
 def test_guesses_valid():
-    assert all(len(guess) == 5 for guess in GUESSES)
+    try:
+        for guess in GUESSES:
+            validate_guess(guess)
+    except InvalidWordError:
+        pytest.fail()
 
 
 def test_secrets_valid():
-    assert all(len(secret) == 5 for secret in SECRETS)
+    try:
+        for secret in SECRETS:
+            validate_secret(secret)
+    except InvalidWordError:
+        pytest.fail()
 
 
 def test_guesses_superset_secrets():

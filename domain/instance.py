@@ -1,7 +1,7 @@
 import random
 
 from domain.hint import Hint
-from domain.word import SECRETS, Word
+from domain.words import SECRETS, validate_guess, validate_secret, validate_word
 
 
 class IllegalActionError(Exception):
@@ -11,9 +11,9 @@ class IllegalActionError(Exception):
 class Instance:
 
     def __init__(self):
-        self.secret: Word | None = None
-        self.candidates = [Word(secret) for secret in SECRETS]
-        self.guesses: list[Word] = []
+        self.secret: str | None = None
+        self.candidates = list(SECRETS)
+        self.guesses: list[str] = []
         self.hints: list[Hint] = []
 
     @property
@@ -22,22 +22,22 @@ class Instance:
             return False
         return self.guesses[-1] == self.secret
 
-    def init_secret(self, secret: str | Word):
+    def init_secret(self, secret: str, force: bool = False):
         if self.secret is not None:
             raise IllegalActionError("cannot re-initialise secret")
-        if isinstance(secret, str):
-            secret = Word(secret)
-        secret.validate_secret()
+        secret = secret.lower()
+        validate_secret(secret, force=force)
         self.secret = secret
+        if secret not in self.candidates:
+            self.candidates.append(secret)
 
-    def make_guess(self, guess: str | Word):
+    def make_guess(self, guess: str, force: bool = False):
         if self.secret is None:
             raise IllegalActionError(
                 "cannot make guess before secret initialised",
             )
-        if isinstance(guess, str):
-            guess = Word(guess)
-        guess.validate_guess()
+        guess = guess.lower()
+        validate_guess(guess, force=force)
         self.guesses.append(guess)
         hint = Hint.from_words(guess, self.secret)
         remaining = [
@@ -55,8 +55,8 @@ class Instance:
                 "cannot make guess before secret initialised",
             )
         if len(self.candidates) == 1:
-            self.make_guess(self.secret)
+            self.make_guess(self.secret, force=True)
         else:
             guesses = self.candidates.copy()
             guesses.remove(self.secret)
-            self.make_guess(random.choice(guesses))
+            self.make_guess(random.choice(guesses), force=True)

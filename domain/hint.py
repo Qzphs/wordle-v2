@@ -1,5 +1,5 @@
 from domain.colour import Colour
-from domain.word import Word
+from domain.words import validate_word
 
 
 class InvalidHintError(Exception):
@@ -24,25 +24,26 @@ class Hint:
         )
 
     @classmethod
-    def from_words(cls, guess: str | Word, secret: str | Word):
-        if isinstance(guess, str):
-            guess = Word(guess)
-        if isinstance(secret, str):
-            secret = Word(secret)
+    def from_words(cls, guess: str, secret: str):
+        guess = guess.lower()
+        secret = secret.lower()
+        validate_word(guess)
+        validate_word(secret)
+
         colours = [Colour.GRAY for _ in range(5)]
-        remaining = list(secret.letters)
+        remaining = list(secret)
         for i in range(5):
-            if guess.letters[i] != secret.letters[i]:
+            if guess[i] != secret[i]:
                 continue
             colours[i] = Colour.GREEN
-            remaining.remove(guess.letters[i])
+            remaining.remove(guess[i])
         for i in range(5):
             if colours[i] == Colour.GREEN:
                 continue
-            if guess.letters[i] not in remaining:
+            if guess[i] not in remaining:
                 continue
             colours[i] = Colour.YELLOW
-            remaining.remove(guess.letters[i])
+            remaining.remove(guess[i])
         return Hint(*colours)
 
     def __eq__(self, other):

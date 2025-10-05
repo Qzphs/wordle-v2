@@ -5,6 +5,7 @@ from config.guild import GUILD
 from config.p1_channel import P1_CHANNEL
 from config.p2_channel import P2_CHANNEL
 from config.token import TOKEN
+from domain.analysis import analysis as analysis_
 from versus.game import Game
 from versus.player import Player
 
@@ -22,6 +23,20 @@ async def on_ready():
     game.channels.clear()
     game.channels.append(bot.get_channel(P1_CHANNEL))
     game.channels.append(bot.get_channel(P2_CHANNEL))
+
+
+@tree.command(
+    name="help",
+    description="tbd",
+    guild=GUILD,
+)
+async def help(interaction: Interaction):
+    player = Player.from_interaction(interaction)
+    try:
+        text = "\n".join(command.name for command in tree.get_commands(guild=GUILD))
+        await player.reply("tbd\n" + text)
+    except Exception as e:
+        await player.reply(f"{e.__class__.__name__}: {e}")
 
 
 @tree.command(
@@ -51,11 +66,24 @@ async def start(interaction: Interaction, word: str):
 
 
 @tree.command(
+    name="forcestart",
+    description="Choose a starting word, bypassing normal secret validation.",
+    guild=GUILD,
+)
+async def forcestart(interaction: Interaction, word: str):
+    player = Player.from_interaction(interaction)
+    try:
+        await game.start(player, word, force=True)
+    except Exception as e:
+        await player.reply(f"{e.__class__.__name__}: {e}")
+
+
+@tree.command(
     name="guess",
     description="Guess a word.",
     guild=GUILD,
 )
-async def auto(interaction: Interaction, word: str):
+async def guess(interaction: Interaction, word: str):
     player = Player.from_interaction(interaction)
     try:
         await game.make_guess(player, word)
@@ -64,14 +92,40 @@ async def auto(interaction: Interaction, word: str):
 
 
 @tree.command(
+    name="forceguess",
+    description="Guess a word, bypassing normal guess validation.",
+    guild=GUILD,
+)
+async def forceguess(interaction: Interaction, word: str):
+    player = Player.from_interaction(interaction)
+    try:
+        await game.make_guess(player, word, force=True)
+    except Exception as e:
+        await player.reply(f"{e.__class__.__name__}: {e}")
+
+
+@tree.command(
     name="auto",
-    description="Guess a random word.",
+    description="Solve the game if there is only one word left, otherwise make a random guess.",
     guild=GUILD,
 )
 async def auto(interaction: Interaction):
     player = Player.from_interaction(interaction)
     try:
         await game.auto_guess(player)
+    except Exception as e:
+        await player.reply(f"{e.__class__.__name__}: {e}")
+
+
+@tree.command(
+    name="analysis",
+    description="List all possible words given a guess sequence.",
+    guild=GUILD,
+)
+async def analysis(interaction: Interaction, guesses: str):
+    player = Player.from_interaction(interaction)
+    try:
+        await player.reply(f"```{analysis_(guesses.split())}```")
     except Exception as e:
         await player.reply(f"{e.__class__.__name__}: {e}")
 

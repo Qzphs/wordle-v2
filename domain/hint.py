@@ -50,3 +50,6 @@ class Hint:
         if not isinstance(other, Hint):
             return NotImplemented
         return self.colours == other.colours
+
+    def formatted(self):
+        return " ".join(colour.emoji for colour in self.colours)

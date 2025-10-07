@@ -105,6 +105,19 @@ async def forceguess(interaction: Interaction, word: str):
 
 
 @tree.command(
+    name="keyboard",
+    description="Show what letters are remaining.",
+    guild=GUILD,
+)
+async def keyboard(interaction: Interaction):
+    player = Player.from_interaction(interaction)
+    try:
+        await game.keyboard(player)
+    except Exception as e:
+        await player.reply(f"{e.__class__.__name__}: {e}")
+
+
+@tree.command(
     name="auto",
     description="Solve the game if there is only one word left, otherwise make a random guess.",
     guild=GUILD,

@@ -1,16 +1,8 @@
 from discord import TextChannel
 
-from domain.colour import Colour
 from domain.instance import IllegalActionError, Instance
 from domain.words import validate_secret
 from versus.player import Player
-
-
-COLOUR_EMOJIS = {
-    Colour.GRAY: ":black_large_square:",
-    Colour.YELLOW: ":yellow_square:",
-    Colour.GREEN: ":green_square:",
-}
 
 
 class Game:
@@ -48,7 +40,6 @@ class Game:
                 "cannot add starting word after game has started",
             )
         if player.channel not in self.channels:
-            print(player.channel, self.channels)
             raise IllegalActionError(
                 "you need to be in one of the two player channels",
             )
@@ -66,9 +57,9 @@ class Game:
             self.instances[1].init_secret(self.words[0], force=True)
             self.instances[1].make_guess(self.words[1], force=True)
             index = self.channels.index(player.channel)
-            await player.reply(self._guess_result(self.instances[index]))
+            await player.reply(self.instances[index].last_guess_formatted())
             await self.opponent(player).notify(
-                self._guess_result(self.instances[1 - index])
+                self.instances[1 - index].last_guess_formatted()
             )
         else:
             await player.reply(
@@ -85,11 +76,22 @@ class Game:
         index = self.channels.index(player.channel)
         instance = self.instances[index]
         instance.make_guess(word, force=force)
-        await player.reply(self._guess_result(instance))
+        await player.reply(instance.last_guess_formatted())
         if instance.solved:
             await self.opponent(player).notify(
                 f"Opponent solved your word in {len(instance.guesses)} guesses.",
             )
+
+    async def keyboard(self, player: Player):
+        if not self.started:
+            raise IllegalActionError("cannot get keyboard before game has started")
+        if player.channel not in self.channels:
+            raise IllegalActionError(
+                "you need to be in one of the two player channels",
+            )
+        index = self.channels.index(player.channel)
+        instance = self.instances[index]
+        await player.reply(instance.keyboard.formatted())
 
     async def auto_guess(self, player: Player):
         if not self.started:
@@ -101,15 +103,8 @@ class Game:
         index = self.channels.index(player.channel)
         instance = self.instances[index]
         instance.auto_guess()
-        await player.reply(self._guess_result(instance))
+        await player.reply(instance.last_guess_formatted())
         if instance.solved:
             await self.opponent(player).notify(
                 f"Opponent solved your word in {len(instance.guesses)} guesses.",
             )
-
-    def _guess_result(self, instance: Instance):
-        word = " ".join(
-            f":regional_indicator_{letter}:" for letter in instance.guesses[-1]
-        )
-        hint = " ".join(COLOUR_EMOJIS[colour] for colour in instance.hints[-1].colours)
-        return f"guess {len(instance.guesses)}/6:\n{word}\n{hint}"

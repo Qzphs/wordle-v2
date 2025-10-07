@@ -1,6 +1,7 @@
 import random
 
 from domain.hint import Hint
+from domain.keyboard import Keyboard
 from domain.words import SECRETS, validate_guess, validate_secret
 
 
@@ -15,6 +16,7 @@ class Instance:
         self.candidates = list(SECRETS)
         self.guesses: list[str] = []
         self.hints: list[Hint] = []
+        self.keyboard = Keyboard()
 
     @property
     def solved(self):
@@ -48,6 +50,7 @@ class Instance:
         self.candidates.clear()
         self.candidates.extend(remaining)
         self.hints.append(hint)
+        self.keyboard.update(guess, hint)
 
     def auto_guess(self):
         if self.secret is None:
@@ -60,3 +63,11 @@ class Instance:
             guesses = self.candidates.copy()
             guesses.remove(self.secret)
             self.make_guess(random.choice(guesses), force=True)
+
+    def last_guess_formatted(self):
+        rows = [
+            f"guess {len(self.guesses)}/6:",
+            " ".join(f":regional_indicator_{letter}:" for letter in self.guesses[-1]),
+            self.hints[-1].formatted(),
+        ]
+        return "\n".join(rows)

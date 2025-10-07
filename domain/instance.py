@@ -1,7 +1,7 @@
 import random
 
 from domain.hint import Hint
-from domain.words import SECRETS, validate_guess, validate_secret, validate_word
+from domain.words import SECRETS, validate_guess, validate_secret
 
 
 class IllegalActionError(Exception):

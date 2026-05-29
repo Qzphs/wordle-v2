@@ -1,6 +1,3 @@
 *.pyc
-config/guild.py
-config/p1_channel.py
-config/p2_channel.py
-config/token.py
+bot.json
 venv/*
